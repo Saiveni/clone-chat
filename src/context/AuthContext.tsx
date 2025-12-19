@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/chat';
-import { currentUser } from '@/data/mockData';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, phone: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -16,7 +15,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [pendingPhone, setPendingPhone] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for existing session
@@ -27,27 +25,68 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (phone: string) => {
-    // Simulate sending OTP
-    setPendingPhone(phone);
+  const login = async (email: string, password: string) => {
+    // Simulate login - in production, this would call Firebase/backend
     await new Promise(resolve => setTimeout(resolve, 1000));
-  };
-
-  const verifyOtp = async (otp: string): Promise<boolean> => {
-    // Simulate OTP verification (accept any 6-digit code)
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    if (otp.length === 6) {
-      const userData = {
-        ...currentUser,
-        phone: pendingPhone || currentUser.phone,
+    // Check if user exists in localStorage (simulating database)
+    const users = JSON.parse(localStorage.getItem('whatsapp_users') || '[]');
+    const existingUser = users.find((u: any) => u.email === email);
+    
+    if (existingUser && existingUser.password === password) {
+      const userData: User = {
+        id: existingUser.id,
+        name: existingUser.name,
+        avatar: existingUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${existingUser.name}`,
+        phone: existingUser.phone,
+        about: existingUser.about || 'Hey there! I am using WhatsApp',
+        lastSeen: new Date(),
+        isOnline: true,
       };
       setUser(userData);
       localStorage.setItem('whatsapp_user', JSON.stringify(userData));
-      setPendingPhone(null);
-      return true;
+      return;
     }
-    return false;
+    
+    throw new Error('Invalid email or password');
+  };
+
+  const signUp = async (email: string, password: string, name: string, phone: string) => {
+    // Simulate signup
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const users = JSON.parse(localStorage.getItem('whatsapp_users') || '[]');
+    
+    // Check if user already exists
+    if (users.find((u: any) => u.email === email)) {
+      throw new Error('User already exists with this email');
+    }
+    
+    const newUser = {
+      id: `user_${Date.now()}`,
+      email,
+      password,
+      name,
+      phone,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+      about: 'Hey there! I am using WhatsApp',
+    };
+    
+    users.push(newUser);
+    localStorage.setItem('whatsapp_users', JSON.stringify(users));
+    
+    const userData: User = {
+      id: newUser.id,
+      name: newUser.name,
+      avatar: newUser.avatar,
+      phone: newUser.phone,
+      about: newUser.about,
+      lastSeen: new Date(),
+      isOnline: true,
+    };
+    
+    setUser(userData);
+    localStorage.setItem('whatsapp_user', JSON.stringify(userData));
   };
 
   const logout = () => {
@@ -62,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         isLoading,
         login,
-        verifyOtp,
+        signUp,
         logout,
       }}
     >

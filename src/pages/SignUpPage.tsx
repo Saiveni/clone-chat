@@ -5,11 +5,14 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/context/AuthContext';
 import { Input } from '@/components/ui/input';
 
-const AuthPage = () => {
+const SignUpPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { signUp, isAuthenticated } = useAuth();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,18 +26,30 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    
+    if (!name || !phone || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
       return;
     }
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      await signUp(email, password, name, phone);
       navigate('/chats');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      setError(err.message || 'Failed to create account');
     } finally {
       setIsLoading(false);
     }
@@ -53,32 +68,58 @@ const AuthPage = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-md">
           {isLoading ? (
             <div className="flex flex-col items-center gap-4 animate-fade-in-up">
               <LoadingSpinner size="lg" />
-              <p className="text-muted-foreground">Signing in...</p>
+              <p className="text-muted-foreground">Creating account...</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in-up">
+            <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in-up">
               <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-foreground">
-                  Welcome back
+                  Create account
                 </h1>
                 <p className="text-muted-foreground">
-                  Sign in to continue to WhatsApp
+                  Sign up to get started with WhatsApp
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Email or Phone
+                    Full Name
                   </label>
                   <Input
                     type="text"
-                    placeholder="Enter email or phone number"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Phone Number
+                  </label>
+                  <Input
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Enter email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="h-12"
@@ -92,7 +133,7 @@ const AuthPage = () => {
                   <div className="relative">
                     <Input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter password"
+                      placeholder="Create password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="h-12 pr-12"
@@ -106,6 +147,19 @@ const AuthPage = () => {
                     </button>
                   </div>
                 </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Confirm Password
+                  </label>
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
               </div>
 
               {error && (
@@ -116,13 +170,13 @@ const AuthPage = () => {
                 type="submit"
                 className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold hover:bg-whatsapp-green-dark transition-colors"
               >
-                Sign In
+                Create Account
               </button>
 
               <p className="text-center text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/signup" className="text-primary font-medium hover:underline">
-                  Create account
+                Already have an account?{' '}
+                <Link to="/auth" className="text-primary font-medium hover:underline">
+                  Sign in
                 </Link>
               </p>
             </form>
@@ -140,4 +194,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+export default SignUpPage;
