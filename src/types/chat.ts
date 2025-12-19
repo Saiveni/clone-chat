@@ -1,0 +1,58 @@
+export interface User {
+  id: string;
+  name: string;
+  phone: string;
+  avatar: string;
+  about: string;
+  lastSeen: Date;
+  isOnline: boolean;
+}
+
+export interface Message {
+  id: string;
+  chatId: string;
+  senderId: string;
+  content: string;
+  type: 'text' | 'image' | 'voice' | 'document';
+  timestamp: Date;
+  status: 'sending' | 'sent' | 'delivered' | 'read';
+  mediaUrl?: string;
+  duration?: number; // for voice messages
+}
+
+export interface Chat {
+  id: string;
+  participants: string[];
+  lastMessage: Message | null;
+  unreadCount: number;
+  isGroup: boolean;
+  groupName?: string;
+  groupAvatar?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Status {
+  id: string;
+  userId: string;
+  mediaUrl: string;
+  caption?: string;
+  timestamp: Date;
+  viewedBy: string[];
+  type: 'image' | 'video' | 'text';
+  backgroundColor?: string;
+}
+
+export interface Call {
+  id: string;
+  callerId: string;
+  receiverId: string;
+  type: 'voice' | 'video';
+  status: 'missed' | 'answered' | 'outgoing';
+  duration?: number;
+  timestamp: Date;
+}
+
+export interface Contact extends User {
+  chatId?: string;
+}

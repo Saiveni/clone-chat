@@ -57,6 +57,31 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // WhatsApp specific
+        whatsapp: {
+          green: "hsl(var(--whatsapp-green))",
+          "green-dark": "hsl(var(--whatsapp-green-dark))",
+          teal: "hsl(var(--whatsapp-teal))",
+          "light-green": "hsl(var(--whatsapp-light-green))",
+        },
+        bubble: {
+          sent: "hsl(var(--bubble-sent))",
+          "sent-foreground": "hsl(var(--bubble-sent-foreground))",
+          received: "hsl(var(--bubble-received))",
+          "received-foreground": "hsl(var(--bubble-received-foreground))",
+        },
+        header: {
+          DEFAULT: "hsl(var(--header-bg))",
+          foreground: "hsl(var(--header-foreground))",
+        },
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+        },
+        tick: {
+          sent: "hsl(var(--tick-sent))",
+          delivered: "hsl(var(--tick-delivered))",
+          read: "hsl(var(--tick-read))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,20 +90,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
