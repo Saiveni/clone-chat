@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
+import SignUpPage from "./pages/SignUpPage";
 import ChatsPage from "./pages/ChatsPage";
 import ChatPage from "./pages/ChatPage";
 import StatusPage from "./pages/StatusPage";
@@ -27,6 +28,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
               <Route path="/chats" element={<ChatsPage />} />
               <Route path="/chat/:chatId" element={<ChatPage />} />
               <Route path="/status" element={<StatusPage />} />
