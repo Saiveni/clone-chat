@@ -2,16 +2,14 @@ import React from 'react';
 import { Message } from '@/types/chat';
 import { Check, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { currentUser } from '@/data/mockData';
 
 interface MessageBubbleProps {
   message: Message;
   showTail?: boolean;
+  isOwn?: boolean;
 }
 
-export const MessageBubble = ({ message, showTail = true }: MessageBubbleProps) => {
-  const isOwn = message.senderId === currentUser.id;
-
+export const MessageBubble = ({ message, showTail = true, isOwn = false }: MessageBubbleProps) => {
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };

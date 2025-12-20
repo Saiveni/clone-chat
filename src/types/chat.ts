@@ -22,13 +22,13 @@ export interface Message {
 
 export interface Chat {
   id: string;
+  type: 'individual' | 'group';
   participants: string[];
-  lastMessage: Message | null;
+  lastMessage?: Message;
   unreadCount: number;
-  isGroup: boolean;
   groupName?: string;
   groupAvatar?: string;
-  createdAt: Date;
+  createdAt?: Date;
   updatedAt: Date;
 }
 

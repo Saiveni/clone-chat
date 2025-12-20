@@ -5,17 +5,17 @@ import { MessageBubble } from '@/components/chat/MessageBubble';
 import { MessageInput } from '@/components/chat/MessageInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import { useChat } from '@/context/ChatContext';
-import { currentUser } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { chatId } = useParams<{ chatId: string }>();
+  const { user } = useAuth();
   const { chats, messages, getContactForChat, sendMessage, markAsRead, setActiveChat, typingUsers } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const chat = chats.find(c => c.id === chatId);
   const contact = chat ? getContactForChat(chat) : undefined;
-  const chatMessages = chatId ? messages[chatId] || [] : [];
   const isTyping = chatId ? typingUsers[chatId] : false;
 
   useEffect(() => {
@@ -23,20 +23,21 @@ const ChatPage = () => {
       setActiveChat(chat);
       markAsRead(chat.id);
     }
-  }, [chat, markAsRead, setActiveChat]);
+    return () => setActiveChat(null);
+  }, [chat?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, isTyping]);
+  }, [messages, isTyping]);
 
   const handleBack = () => {
     setActiveChat(null);
     navigate('/chats');
   };
 
-  const handleSend = (content: string) => {
+  const handleSend = async (content: string) => {
     if (chatId) {
-      sendMessage(chatId, content);
+      await sendMessage(chatId, content);
     }
   };
 
@@ -49,10 +50,10 @@ const ChatPage = () => {
   }
 
   // Group messages by date
-  const groupedMessages: { date: string; messages: typeof chatMessages }[] = [];
+  const groupedMessages: { date: string; messages: typeof messages }[] = [];
   let currentDate = '';
 
-  chatMessages.forEach(msg => {
+  messages.forEach(msg => {
     const msgDate = new Date(msg.timestamp).toLocaleDateString();
     if (msgDate !== currentDate) {
       currentDate = msgDate;
@@ -84,7 +85,7 @@ const ChatPage = () => {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto chat-pattern">
         <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
-          {groupedMessages.map((group, groupIndex) => (
+          {groupedMessages.map((group) => (
             <div key={group.date} className="space-y-2">
               {/* Date label */}
               <div className="flex justify-center">
@@ -97,12 +98,14 @@ const ChatPage = () => {
               {group.messages.map((msg, msgIndex) => {
                 const prevMsg = msgIndex > 0 ? group.messages[msgIndex - 1] : null;
                 const showTail = !prevMsg || prevMsg.senderId !== msg.senderId;
+                const isOwn = msg.senderId === user?.id;
 
                 return (
                   <MessageBubble
                     key={msg.id}
                     message={msg}
                     showTail={showTail}
+                    isOwn={isOwn}
                   />
                 );
               })}
