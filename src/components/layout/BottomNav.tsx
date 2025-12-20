@@ -1,11 +1,11 @@
 import React from 'react';
-import { MessageCircle, CircleDot, Phone, Settings } from 'lucide-react';
+import { MessageCircle, Users, Phone, Settings } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: MessageCircle, label: 'Chats', path: '/chats' },
-  { icon: CircleDot, label: 'Status', path: '/status' },
+  { icon: Users, label: 'Contacts', path: '/contacts' },
   { icon: Phone, label: 'Calls', path: '/calls' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
