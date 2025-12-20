@@ -14,7 +14,6 @@ import { MainHeader } from '@/components/layout/MainHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { currentUser } from '@/data/mockData';
 
 const settingsItems = [
   { icon: User, label: 'Account', description: 'Privacy, security, change number' },
@@ -27,10 +26,10 @@ const settingsItems = [
 
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
@@ -43,8 +42,8 @@ const SettingsPage = () => {
         <div className="flex items-center gap-4">
           <div className="relative">
             <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
+              src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+              alt={user?.name || 'User'}
               className="h-20 w-20 rounded-full object-cover"
             />
             <button className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-2 border-background">
@@ -53,10 +52,10 @@ const SettingsPage = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-semibold text-foreground truncate">
-              {currentUser.name}
+              {user?.name || 'User'}
             </h2>
             <p className="text-sm text-muted-foreground truncate">
-              {currentUser.about}
+              {user?.about || 'Hey there! I am using WhatsApp'}
             </p>
           </div>
         </div>

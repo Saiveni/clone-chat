@@ -1,103 +1,111 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/chat';
 
 interface AuthContextType {
   user: User | null;
+  firebaseUser: FirebaseUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, phone: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const savedUser = localStorage.getItem('whatsapp_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        setFirebaseUser(fbUser);
+        // Fetch user profile from Firestore
+        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUser({
+            id: fbUser.uid,
+            name: userData.name || 'User',
+            avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
+            phone: userData.phone || '',
+            about: userData.about || 'Hey there! I am using WhatsApp',
+            lastSeen: userData.lastSeen?.toDate() || new Date(),
+            isOnline: true,
+          });
+          // Update online status
+          await updateDoc(doc(db, 'users', fbUser.uid), {
+            isOnline: true,
+            lastSeen: serverTimestamp(),
+          });
+        }
+      } else {
+        setFirebaseUser(null);
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate login - in production, this would call Firebase/backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const fbUser = userCredential.user;
     
-    // Check if user exists in localStorage (simulating database)
-    const users = JSON.parse(localStorage.getItem('whatsapp_users') || '[]');
-    const existingUser = users.find((u: any) => u.email === email);
-    
-    if (existingUser && existingUser.password === password) {
-      const userData: User = {
-        id: existingUser.id,
-        name: existingUser.name,
-        avatar: existingUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${existingUser.name}`,
-        phone: existingUser.phone,
-        about: existingUser.about || 'Hey there! I am using WhatsApp',
-        lastSeen: new Date(),
-        isOnline: true,
-      };
-      setUser(userData);
-      localStorage.setItem('whatsapp_user', JSON.stringify(userData));
-      return;
-    }
-    
-    throw new Error('Invalid email or password');
+    // Update online status
+    await updateDoc(doc(db, 'users', fbUser.uid), {
+      isOnline: true,
+      lastSeen: serverTimestamp(),
+    });
   };
 
   const signUp = async (email: string, password: string, name: string, phone: string) => {
-    // Simulate signup
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const fbUser = userCredential.user;
     
-    const users = JSON.parse(localStorage.getItem('whatsapp_users') || '[]');
-    
-    // Check if user already exists
-    if (users.find((u: any) => u.email === email)) {
-      throw new Error('User already exists with this email');
-    }
-    
-    const newUser = {
-      id: `user_${Date.now()}`,
+    // Create user profile in Firestore
+    await setDoc(doc(db, 'users', fbUser.uid), {
       email,
-      password,
       name,
       phone,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
       about: 'Hey there! I am using WhatsApp',
-    };
-    
-    users.push(newUser);
-    localStorage.setItem('whatsapp_users', JSON.stringify(users));
-    
-    const userData: User = {
-      id: newUser.id,
-      name: newUser.name,
-      avatar: newUser.avatar,
-      phone: newUser.phone,
-      about: newUser.about,
-      lastSeen: new Date(),
       isOnline: true,
-    };
-    
-    setUser(userData);
-    localStorage.setItem('whatsapp_user', JSON.stringify(userData));
+      lastSeen: serverTimestamp(),
+      createdAt: serverTimestamp(),
+    });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (firebaseUser) {
+      // Update offline status before signing out
+      await updateDoc(doc(db, 'users', firebaseUser.uid), {
+        isOnline: false,
+        lastSeen: serverTimestamp(),
+      });
+    }
+    await signOut(auth);
     setUser(null);
-    localStorage.removeItem('whatsapp_user');
+    setFirebaseUser(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        firebaseUser,
         isAuthenticated: !!user,
         isLoading,
         login,
