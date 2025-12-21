@@ -13,7 +13,7 @@ export interface Message {
   chatId: string;
   senderId: string;
   content: string;
-  type: 'text' | 'image' | 'voice' | 'document';
+  type: 'text' | 'image' | 'video' | 'voice' | 'document';
   timestamp: Date;
   status: 'sending' | 'sent' | 'delivered' | 'read';
   mediaUrl?: string;

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   createUserWithEmailAndPassword, 
@@ -6,7 +7,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/chat';
 
@@ -18,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUserAvatar: (avatar: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,25 +33,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser);
-        // Fetch user profile from Firestore
-        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            id: fbUser.uid,
-            name: userData.name || 'User',
-            avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
-            phone: userData.phone || '',
-            about: userData.about || 'Hey there! I am using WhatsApp',
-            lastSeen: userData.lastSeen?.toDate() || new Date(),
-            isOnline: true,
-          });
-          // Update online status
-          await updateDoc(doc(db, 'users', fbUser.uid), {
-            isOnline: true,
-            lastSeen: serverTimestamp(),
-          });
-        }
+        // Listen to user profile changes in real-time
+        const userDocRef = doc(db, 'users', fbUser.uid);
+        const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUser({
+              id: fbUser.uid,
+              name: userData.name || 'User',
+              avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
+              phone: userData.phone || '',
+              about: userData.about || 'Hey there! I am using WhatsApp',
+              lastSeen: userData.lastSeen?.toDate() || new Date(),
+              isOnline: true,
+            });
+          }
+        });
+        // Update online status
+        await updateDoc(userDocRef, {
+          isOnline: true,
+          lastSeen: serverTimestamp(),
+        });
+        // Store unsubscribe for user doc listener
+        return () => unsubscribeUser();
       } else {
         setFirebaseUser(null);
         setUser(null);
@@ -59,6 +65,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
+
+  const updateUserAvatar = (avatar: string) => {
+    if (user) {
+      setUser({ ...user, avatar });
+    }
+  };
 
   const login = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -111,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         signUp,
         logout,
+        updateUserAvatar,
       }}
     >
       {children}

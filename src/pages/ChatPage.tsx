@@ -35,9 +35,9 @@ const ChatPage = () => {
     navigate('/chats');
   };
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, type: 'text' | 'image' | 'document' = 'text', mediaUrl?: string) => {
     if (chatId) {
-      await sendMessage(chatId, content);
+      await sendMessage(chatId, content, type, mediaUrl);
     }
   };
 

@@ -1,9 +1,8 @@
 import React from 'react';
 import { Chat, Contact } from '@/types/chat';
-import { formatDistanceToNow } from 'date-fns';
 import { Check, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { currentUser } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 interface ChatListItemProps {
   chat: Chat;
@@ -14,9 +13,11 @@ interface ChatListItemProps {
 }
 
 export const ChatListItem = ({ chat, contact, isActive, onClick, isTyping }: ChatListItemProps) => {
+  const { user } = useAuth();
+  
   if (!contact) return null;
 
-  const isOwnMessage = chat.lastMessage?.senderId === currentUser.id;
+  const isOwnMessage = chat.lastMessage?.senderId === user?.id;
   const messageStatus = chat.lastMessage?.status;
 
   const getStatusIcon = () => {
@@ -35,18 +36,27 @@ export const ChatListItem = ({ chat, contact, isActive, onClick, isTyping }: Cha
   };
 
   const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    try {
+      const validDate = new Date(date);
+      if (isNaN(validDate.getTime())) {
+        return '';
+      }
+      
+      const now = new Date();
+      const diff = now.getTime() - validDate.getTime();
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (days === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (days === 1) {
-      return 'Yesterday';
-    } else if (days < 7) {
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      if (days === 0) {
+        return validDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else if (days === 1) {
+        return 'Yesterday';
+      } else if (days < 7) {
+        return validDate.toLocaleDateString([], { weekday: 'short' });
+      } else {
+        return validDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+    } catch {
+      return '';
     }
   };
 

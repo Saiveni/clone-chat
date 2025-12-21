@@ -1,10 +1,11 @@
 import React from 'react';
-import { MessageCircle, Users, Phone, Settings } from 'lucide-react';
+import { MessageCircle, Users, Phone, Settings, Zap } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: MessageCircle, label: 'Chats', path: '/chats' },
+  { icon: Zap, label: 'Status', path: '/status' },
   { icon: Users, label: 'Contacts', path: '/contacts' },
   { icon: Phone, label: 'Calls', path: '/calls' },
   { icon: Settings, label: 'Settings', path: '/settings' },
@@ -25,7 +26,7 @@ export const BottomNav = () => {
               key={path}
               to={path}
               className={cn(
-                'flex flex-col items-center gap-1 py-2 px-4 transition-colors',
+                'flex flex-col items-center gap-1 py-2 px-3 transition-colors',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}
             >

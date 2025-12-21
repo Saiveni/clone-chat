@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   collection, 
@@ -24,7 +25,7 @@ interface ChatContextType {
   contacts: Contact[];
   activeChat: Chat | null;
   setActiveChat: (chat: Chat | null) => void;
-  sendMessage: (chatId: string, content: string, type?: Message['type']) => Promise<void>;
+  sendMessage: (chatId: string, content: string, type?: Message['type'], mediaUrl?: string) => Promise<void>;
   markAsRead: (chatId: string) => Promise<void>;
   getContactForChat: (chat: Chat) => Contact | undefined;
   typingUsers: Record<string, boolean>;
@@ -128,6 +129,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           type: data.type || 'text',
           timestamp: data.timestamp?.toDate() || new Date(),
           status: data.status || 'sent',
+          mediaUrl: data.mediaUrl || undefined,
         });
       });
       setMessages(loadedMessages);
@@ -170,7 +172,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     return newChatRef.id;
   };
 
-  const sendMessage = async (chatId: string, content: string, type: Message['type'] = 'text') => {
+  const sendMessage = async (chatId: string, content: string, type: Message['type'] = 'text', mediaUrl?: string) => {
     if (!user) return;
 
     const messagesRef = collection(db, 'chats', chatId, 'messages');
@@ -183,6 +185,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       type,
       timestamp: serverTimestamp(),
       status: 'sent',
+      mediaUrl: mediaUrl || null,
     });
 
     // Get chat to find other participant
@@ -199,6 +202,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         type,
         timestamp: serverTimestamp(),
         status: 'sent',
+        mediaUrl: mediaUrl || null,
       },
       [`unreadCounts.${otherParticipant}`]: (chatData?.unreadCounts?.[otherParticipant] || 0) + 1,
       updatedAt: serverTimestamp(),
