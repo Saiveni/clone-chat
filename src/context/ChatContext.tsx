@@ -27,9 +27,11 @@ interface ChatContextType {
   setActiveChat: (chat: Chat | null) => void;
   sendMessage: (chatId: string, content: string, type?: Message['type'], mediaUrl?: string) => Promise<void>;
   markAsRead: (chatId: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   getContactForChat: (chat: Chat) => Contact | undefined;
   typingUsers: Record<string, boolean>;
   createOrGetChat: (contactId: string) => Promise<string>;
+  createChat: (participantIds: string[], isGroup: boolean, groupName?: string) => Promise<string>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -55,7 +57,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           loadedContacts.push({
             id: doc.id,
             name: data.name || 'Unknown',
-            avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doc.id}`,
+            avatar: data.avatar || null,
             phone: data.phone || '',
             about: data.about || 'Hey there! I am using WhatsApp',
             lastSeen: data.lastSeen?.toDate() || new Date(),
@@ -172,6 +174,35 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     return newChatRef.id;
   };
 
+  const createChat = async (participantIds: string[], isGroup: boolean, groupName?: string): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const chatsRef = collection(db, 'chats');
+    const allParticipants = [user.id, ...participantIds];
+
+    // For individual chats, check if already exists
+    if (!isGroup && participantIds.length === 1) {
+      return createOrGetChat(participantIds[0]);
+    }
+
+    // Create group chat
+    const unreadCounts: Record<string, number> = {};
+    allParticipants.forEach(id => {
+      unreadCounts[id] = 0;
+    });
+
+    const newChatRef = await addDoc(chatsRef, {
+      type: isGroup ? 'group' : 'individual',
+      name: groupName || undefined,
+      participants: allParticipants,
+      unreadCounts,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return newChatRef.id;
+  };
+
   const sendMessage = async (chatId: string, content: string, type: Message['type'] = 'text', mediaUrl?: string) => {
     if (!user) return;
 
@@ -218,6 +249,21 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const markAllAsRead = async () => {
+    if (!user) return;
+
+    const updates = chats.map(async (chat) => {
+      if (chat.unreadCount > 0) {
+        const chatRef = doc(db, 'chats', chat.id);
+        await updateDoc(chatRef, {
+          [`unreadCounts.${user.id}`]: 0,
+        });
+      }
+    });
+
+    await Promise.all(updates);
+  };
+
   const getContactForChat = (chat: Chat): Contact | undefined => {
     if (!user) return undefined;
     const otherParticipantId = chat.participants.find(p => p !== user.id);
@@ -234,9 +280,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         setActiveChat,
         sendMessage,
         markAsRead,
+        markAllAsRead,
         getContactForChat,
         typingUsers,
         createOrGetChat,
+        createChat,
       }}
     >
       {children}

@@ -84,7 +84,7 @@ const ChatPage = () => {
 
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto chat-pattern">
-        <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        <div className="max-w-4xl mx-auto px-3 md:px-4 py-4 space-y-4">
           {groupedMessages.map((group) => (
             <div key={group.date} className="space-y-2">
               {/* Date label */}

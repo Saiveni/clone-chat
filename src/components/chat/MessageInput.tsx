@@ -72,7 +72,7 @@ export const MessageInput = ({ onSend }: MessageInputProps) => {
   };
 
   return (
-    <div className="bg-secondary/50 px-4 py-3">
+    <div className="bg-secondary/50 px-3 md:px-4 py-3 md:py-3 border-t border-border safe-area-bottom">
       <div className="flex items-end gap-2 max-w-4xl mx-auto flex-col">
         {/* Selected media preview */}
         {selectedMedia && (
@@ -96,27 +96,29 @@ export const MessageInput = ({ onSend }: MessageInputProps) => {
               )}
               <button
                 onClick={() => setSelectedMedia(null)}
-                className="p-1 hover:bg-secondary rounded transition-colors"
+                className="p-1.5 md:p-1 hover:bg-secondary rounded transition-colors active:scale-95 touch-manipulation"
+                aria-label="Remove attachment"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5 md:h-4 md:w-4" />
               </button>
             </div>
           </div>
         )}
 
         {/* Input row */}
-        <div className="flex items-end gap-2 w-full">
+        <div className="flex items-end gap-1.5 md:gap-2 w-full">
           {/* Emoji button */}
-          <button className="flex-shrink-0 p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary">
-            <Smile className="h-6 w-6" />
+          <button className="flex-shrink-0 p-2.5 md:p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary active:scale-95 touch-manipulation" aria-label="Emoji">
+            <Smile className="h-7 w-7 md:h-6 md:w-6" />
           </button>
 
           {/* Attachment button */}
           <button 
             onClick={handleAttachmentClick}
-            className="flex-shrink-0 p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary"
+            className="flex-shrink-0 p-2.5 md:p-2 text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-secondary active:scale-95 touch-manipulation"
+            aria-label="Attach file"
           >
-            <Paperclip className="h-6 w-6" />
+            <Paperclip className="h-7 w-7 md:h-6 md:w-6" />
           </button>
 
         {/* Input */}
@@ -131,7 +133,7 @@ export const MessageInput = ({ onSend }: MessageInputProps) => {
             onKeyDown={handleKeyDown}
             placeholder="Type a message"
             rows={1}
-            className="w-full resize-none rounded-2xl bg-background border border-border px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full resize-none rounded-2xl bg-background border border-border px-4 py-3 md:py-2.5 text-base md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all touch-manipulation"
             style={{ maxHeight: '120px' }}
           />
         </div>
@@ -140,16 +142,17 @@ export const MessageInput = ({ onSend }: MessageInputProps) => {
           <button
             onClick={message.trim() || selectedMedia ? handleSend : undefined}
             className={cn(
-              'flex-shrink-0 p-3 rounded-full transition-all',
+              'flex-shrink-0 p-3.5 md:p-3 rounded-full transition-all active:scale-95 touch-manipulation',
               (message.trim() || selectedMedia)
                 ? 'bg-primary text-primary-foreground hover:bg-whatsapp-green-dark'
                 : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
             )}
+            aria-label={message.trim() || selectedMedia ? 'Send message' : 'Voice message'}
           >
             {message.trim() || selectedMedia ? (
-              <Send className="h-5 w-5" />
+              <Send className="h-6 w-6 md:h-5 md:w-5" />
             ) : (
-              <Mic className="h-6 w-6" />
+              <Mic className="h-7 w-7 md:h-6 md:w-6" />
             )}
           </button>
         </div>

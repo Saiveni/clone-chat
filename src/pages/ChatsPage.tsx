@@ -4,14 +4,17 @@ import { MessageSquarePlus, Search } from 'lucide-react';
 import { MainHeader } from '@/components/layout/MainHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { ChatListItem } from '@/components/chat/ChatListItem';
+import { NewChatDialog } from '@/components/chat/NewChatDialog';
 import { useChat } from '@/context/ChatContext';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const ChatsPage = () => {
   const navigate = useNavigate();
-  const { chats, getContactForChat, setActiveChat, typingUsers } = useChat();
+  const { chats, getContactForChat, setActiveChat, typingUsers, markAllAsRead } = useChat();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
 
   const filteredChats = chats.filter(chat => {
     const contact = getContactForChat(chat);
@@ -25,12 +28,26 @@ const ChatsPage = () => {
     navigate(`/chat/${chat.id}`);
   };
 
+  const handleNewGroup = () => {
+    setShowNewChatDialog(true);
+  };
+
+  const handleReadAll = async () => {
+    await markAllAsRead();
+    toast.success('All chats marked as read');
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-0">
-      <MainHeader title="WhatsApp" showCamera />
+      <MainHeader 
+        title="WhatsApp" 
+        showCamera 
+        onNewGroup={handleNewGroup}
+        onReadAll={handleReadAll}
+      />
 
       {/* Search bar */}
-      <div className="px-4 py-2 bg-background sticky top-0 z-10">
+      <div className="px-4 py-3 md:py-2 bg-background sticky top-[56px] md:top-[52px] z-10 border-b border-border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
@@ -38,7 +55,7 @@ const ChatsPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search or start new chat"
-            className="w-full pl-10 pr-4 py-2 rounded-lg bg-secondary text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full pl-10 pr-4 py-3 md:py-2 rounded-lg bg-secondary text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 text-base"
           />
         </div>
       </div>
@@ -69,9 +86,21 @@ const ChatsPage = () => {
       </div>
 
       {/* FAB */}
-      <button className="fixed bottom-24 right-4 lg:bottom-6 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-whatsapp-green-dark transition-colors">
-        <MessageSquarePlus className="h-6 w-6" />
+      <button 
+        onClick={() => setShowNewChatDialog(true)}
+        className="fixed bottom-24 right-4 lg:bottom-6 h-16 w-16 md:h-14 md:w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-whatsapp-green-dark transition-all active:scale-95 touch-manipulation z-40" 
+        aria-label="New chat"
+      >
+        <MessageSquarePlus className="h-7 w-7 md:h-6 md:w-6" />
       </button>
+
+      <NewChatDialog 
+        open={showNewChatDialog} 
+        onOpenChange={setShowNewChatDialog}
+        onChatCreated={() => {
+          // Could navigate to the new chat or just close
+        }}
+      />
 
       <BottomNav />
     </div>

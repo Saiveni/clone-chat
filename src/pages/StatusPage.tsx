@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 interface Status {
   id: string;
@@ -113,7 +114,7 @@ const StatusPage = () => {
         await addDoc(collection(db, 'statuses'), {
           userId: user.id,
           userName: user.name,
-          userAvatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`,
+          userAvatar: user.avatar || null,
           mediaUrl,
           type: mediaType,
           timestamp: serverTimestamp(),
@@ -137,7 +138,7 @@ const StatusPage = () => {
       await addDoc(collection(db, 'statuses'), {
         userId: user.id,
         userName: user.name,
-        userAvatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`,
+        userAvatar: user.avatar || null,
         caption: textStatus,
         type: 'text',
         backgroundColor: selectedBgColor,
@@ -167,17 +168,17 @@ const StatusPage = () => {
           <div className="relative">
             {myStatuses.length > 0 ? (
               <div className="h-14 w-14 rounded-full p-0.5 bg-gradient-to-br from-primary to-whatsapp-teal">
-                <img
-                  src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                  alt="My status"
-                  className="h-full w-full rounded-full object-cover border-2 border-background"
+                <UserAvatar
+                  name={user?.name || 'User'}
+                  avatar={user?.avatar}
+                  className="h-full w-full border-2 border-background"
                 />
               </div>
             ) : (
-              <img
-                src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                alt="My status"
-                className="h-14 w-14 rounded-full object-cover"
+              <UserAvatar
+                name={user?.name || 'User'}
+                avatar={user?.avatar}
+                className="h-14 w-14"
               />
             )}
             <button 
@@ -214,10 +215,10 @@ const StatusPage = () => {
               >
                 <div className="relative">
                   <div className="h-14 w-14 rounded-full p-0.5 bg-gradient-to-br from-primary to-whatsapp-teal">
-                    <img
-                      src={status.userAvatar}
-                      alt={status.userName}
-                      className="h-full w-full rounded-full object-cover border-2 border-background"
+                    <UserAvatar
+                      name={status.userName}
+                      avatar={status.userAvatar}
+                      className="h-full w-full border-2 border-background"
                     />
                   </div>
                 </div>
@@ -248,10 +249,10 @@ const StatusPage = () => {
               >
                 <div className="relative">
                   <div className="h-14 w-14 rounded-full p-0.5 bg-muted-foreground/30">
-                    <img
-                      src={status.userAvatar}
-                      alt={status.userName}
-                      className="h-full w-full rounded-full object-cover border-2 border-background"
+                    <UserAvatar
+                      name={status.userName}
+                      avatar={status.userAvatar}
+                      className="h-full w-full border-2 border-background"
                     />
                   </div>
                 </div>
@@ -404,10 +405,10 @@ const StatusPage = () => {
 
           {/* Header */}
           <div className="absolute top-4 left-0 right-0 z-10 px-4 flex items-center gap-3">
-            <img
-              src={viewingStatusData.userAvatar}
-              alt={viewingStatusData.userName}
-              className="h-10 w-10 rounded-full object-cover"
+            <UserAvatar
+              name={viewingStatusData.userName}
+              avatar={viewingStatusData.userAvatar}
+              className="h-10 w-10"
             />
             <div className="flex-1">
               <h3 className="font-semibold text-white">{viewingStatusData.userName}</h3>

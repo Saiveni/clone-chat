@@ -15,8 +15,8 @@ export const BottomNav = () => {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 lg:hidden">
-      <div className="flex items-center justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 safe-area-bottom">
+      <div className="flex items-center justify-around max-w-7xl mx-auto">
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive = location.pathname === path || 
             (path === '/chats' && location.pathname.startsWith('/chat/'));
@@ -26,11 +26,11 @@ export const BottomNav = () => {
               key={path}
               to={path}
               className={cn(
-                'flex flex-col items-center gap-1 py-2 px-3 transition-colors',
+                'flex flex-col items-center gap-1 py-3 px-4 min-w-[60px] transition-colors active:scale-95 touch-manipulation',
                 isActive ? 'text-primary' : 'text-muted-foreground'
               )}
             >
-              <Icon className={cn('h-6 w-6', isActive && 'fill-current')} />
+              <Icon className={cn('h-7 w-7', isActive && 'fill-current')} />
               <span className="text-xs font-medium">{label}</span>
             </NavLink>
           );

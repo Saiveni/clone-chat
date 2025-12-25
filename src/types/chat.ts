@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   phone: string;
-  avatar: string;
+  avatar: string | null;
   about: string;
   lastSeen: Date;
   isOnline: boolean;

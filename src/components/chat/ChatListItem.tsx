@@ -3,6 +3,7 @@ import { Chat, Contact } from '@/types/chat';
 import { Check, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 
 interface ChatListItemProps {
   chat: Chat;
@@ -64,28 +65,25 @@ export const ChatListItem = ({ chat, contact, isActive, onClick, isTyping }: Cha
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors',
+        'w-full flex items-center gap-3 md:gap-3 px-4 py-4 md:py-3 hover:bg-secondary/50 active:bg-secondary/70 transition-colors touch-manipulation',
         isActive && 'bg-secondary'
       )}
     >
       {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        <img
-          src={contact.avatar}
-          alt={contact.name}
-          className="h-12 w-12 rounded-full object-cover"
-        />
-        {contact.isOnline && (
-          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-primary border-2 border-background animate-online-pulse" />
-        )}
-      </div>
+      <UserAvatar
+        name={contact.name}
+        avatar={contact.avatar}
+        className="h-14 w-14 md:h-12 md:w-12"
+        showOnlineStatus={true}
+        isOnline={contact.isOnline}
+      />
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-foreground truncate">{contact.name}</h3>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-semibold text-foreground truncate text-base md:text-sm">{contact.name}</h3>
           <span className={cn(
-            'text-xs',
+            'text-xs flex-shrink-0 ml-2',
             chat.unreadCount > 0 ? 'text-primary font-semibold' : 'text-muted-foreground'
           )}>
             {chat.lastMessage && formatTime(new Date(chat.lastMessage.timestamp))}
@@ -95,15 +93,15 @@ export const ChatListItem = ({ chat, contact, isActive, onClick, isTyping }: Cha
           <div className="flex items-center gap-1 flex-1 min-w-0">
             {getStatusIcon()}
             {isTyping ? (
-              <span className="text-sm text-primary font-medium">typing...</span>
+              <span className="text-sm md:text-sm text-primary font-medium">typing...</span>
             ) : (
-              <p className="text-sm text-muted-foreground truncate">
+              <p className="text-sm md:text-sm text-muted-foreground truncate">
                 {chat.lastMessage?.content || 'No messages yet'}
               </p>
             )}
           </div>
           {chat.unreadCount > 0 && (
-            <span className="ml-2 flex-shrink-0 h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
+            <span className="ml-2 flex-shrink-0 h-6 min-w-[24px] md:h-5 md:min-w-[20px] px-2 md:px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
               {chat.unreadCount}
             </span>
           )}

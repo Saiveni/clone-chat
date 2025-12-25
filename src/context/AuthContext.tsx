@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser({
               id: fbUser.uid,
               name: userData.name || 'User',
-              avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
+              avatar: userData.avatar || null,
               phone: userData.phone || '',
               about: userData.about || 'Hey there! I am using WhatsApp',
               lastSeen: userData.lastSeen?.toDate() || new Date(),
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       name,
       phone,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+      avatar: null,
       about: 'Hey there! I am using WhatsApp',
       isOnline: true,
       lastSeen: serverTimestamp(),
