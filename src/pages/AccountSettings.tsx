@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';import { UserAvatar } from '@/components/ui/UserAvatar';
+import { toast } from 'sonner';
+import { UserAvatar } from '@/components/ui/UserAvatar';
+
 const AccountSettings = () => {
   const navigate = useNavigate();
-  const { user, firebaseUser, updateUserAvatar } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -38,13 +40,10 @@ const AccountSettings = () => {
         const base64String = event.target?.result as string;
         
         if (firebaseUser) {
-          // Update in Firestore
+          // Update in Firestore - avatar will update via real-time listener
           await updateDoc(doc(db, 'users', firebaseUser.uid), {
             avatar: base64String,
           });
-          
-          // Update local state immediately for instant UI feedback
-          updateUserAvatar(base64String);
           
           toast.success('Profile picture updated successfully');
         }

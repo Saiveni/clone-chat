@@ -27,7 +27,7 @@ interface NewChatDialogProps {
 
 export const NewChatDialog = ({ open, onOpenChange, onChatCreated }: NewChatDialogProps) => {
   const { user: currentUser } = useAuth();
-  const { createChat } = useChat();
+  const { createOrGetChat } = useChat();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState('');
@@ -92,12 +92,12 @@ export const NewChatDialog = ({ open, onOpenChange, onChatCreated }: NewChatDial
 
     try {
       if (isCreatingGroup) {
-        // Create group chat
-        await createChat(selectedUsers, true, groupName.trim());
-        toast.success(`Group "${groupName}" created successfully`);
+        // Group chats not yet supported, create individual chat with first selected user
+        toast.info('Group chats coming soon! Creating individual chat instead.');
+        await createOrGetChat(selectedUsers[0]);
       } else {
         // Create individual chat
-        await createChat([selectedUsers[0]], false);
+        await createOrGetChat(selectedUsers[0]);
         toast.success('Chat created successfully');
       }
       
