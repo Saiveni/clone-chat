@@ -96,7 +96,7 @@ const SignUpPage = () => {
                     placeholder="Enter your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-12"
+                    className="h-12 md:h-11 text-base"
                   />
                 </div>
 
@@ -109,7 +109,7 @@ const SignUpPage = () => {
                     placeholder="Enter phone number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="h-12"
+                    className="h-12 md:h-11 text-base"
                   />
                 </div>
 
@@ -122,7 +122,7 @@ const SignUpPage = () => {
                     placeholder="Enter email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12"
+                    className="h-12 md:h-11 text-base"
                   />
                 </div>
 
@@ -136,14 +136,14 @@ const SignUpPage = () => {
                       placeholder="Create password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-12 pr-12"
+                      className="h-12 md:h-11 pr-12 text-base"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2 active:scale-95 touch-manipulation"
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? <EyeOff className="h-6 w-6 md:h-5 md:w-5" /> : <Eye className="h-6 w-6 md:h-5 md:w-5" />}
                     </button>
                   </div>
                 </div>
@@ -157,7 +157,7 @@ const SignUpPage = () => {
                     placeholder="Confirm password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12"
+                    className="h-12 md:h-11 text-base"
                   />
                 </div>
               </div>
@@ -168,7 +168,7 @@ const SignUpPage = () => {
 
               <button
                 type="submit"
-                className="w-full bg-primary text-primary-foreground py-3 rounded-xl font-semibold hover:bg-whatsapp-green-dark transition-colors"
+                className="w-full bg-primary text-primary-foreground py-3.5 md:py-3 rounded-xl font-semibold hover:bg-whatsapp-green-dark transition-all active:scale-[0.98] touch-manipulation text-base md:text-sm"
               >
                 Create Account
               </button>
