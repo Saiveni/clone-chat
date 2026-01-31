@@ -122,10 +122,12 @@ const ContactsPage = () => {
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <UserPlus className="h-16 w-16 mb-4 opacity-50" />
             <p className="text-lg font-medium">No contacts found</p>
-            <p className="text-sm">
-              {contacts.length === 0 
-                ? 'No other users have signed up yet' 
-                : 'Try a different search'}
+            <p className="text-sm text-center px-4">
+              {searchQuery 
+                ? 'Try a different search' 
+                : contacts.length === 0 
+                  ? 'No other users have signed up yet. Share this app with friends!' 
+                  : 'All registered users will appear here'}
             </p>
           </div>
         )}

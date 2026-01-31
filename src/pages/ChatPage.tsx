@@ -6,6 +6,7 @@ import { MessageInput } from '@/components/chat/MessageInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import { useChat } from '@/context/ChatContext';
 import { useAuth } from '@/context/AuthContext';
+import { Message } from '@/types/chat';
 
 const ChatPage = () => {
   const navigate = useNavigate();
@@ -35,9 +36,9 @@ const ChatPage = () => {
     navigate('/chats');
   };
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, type: Message['type'] = 'text', file?: File) => {
     if (chatId) {
-      await sendMessage(chatId, content);
+      await sendMessage(chatId, content, type, file);
     }
   };
 
@@ -50,31 +51,38 @@ const ChatPage = () => {
   }
 
   // Group messages by date
-  const groupedMessages: { date: string; messages: typeof messages }[] = [];
-  let currentDate = '';
+  const groupedMessages: { date: Date; messages: typeof messages }[] = [];
+  let currentDateStr = '';
 
   messages.forEach(msg => {
-    const msgDate = new Date(msg.timestamp).toLocaleDateString();
-    if (msgDate !== currentDate) {
-      currentDate = msgDate;
-      groupedMessages.push({ date: msgDate, messages: [msg] });
+    // Handle both Date objects and Firestore Timestamps
+    const timestamp = msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp);
+    const msgDateStr = timestamp.toDateString();
+    
+    if (msgDateStr !== currentDateStr) {
+      currentDateStr = msgDateStr;
+      groupedMessages.push({ date: timestamp, messages: [msg] });
     } else {
       groupedMessages[groupedMessages.length - 1].messages.push(msg);
     }
   });
 
-  const formatDateLabel = (dateStr: string) => {
-    const date = new Date(dateStr);
+  const formatDateLabel = (date: Date) => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    // Reset time for comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
       return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
       return 'Yesterday';
     } else {
-      return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     }
   };
 
@@ -85,8 +93,8 @@ const ChatPage = () => {
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto chat-pattern">
         <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
-          {groupedMessages.map((group) => (
-            <div key={group.date} className="space-y-2">
+          {groupedMessages.map((group, groupIndex) => (
+            <div key={group.date.toISOString() + groupIndex} className="space-y-2">
               {/* Date label */}
               <div className="flex justify-center">
                 <span className="bg-card/90 backdrop-blur-sm text-muted-foreground text-xs px-3 py-1 rounded-lg shadow-sm">

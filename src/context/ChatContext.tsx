@@ -14,7 +14,8 @@ import {
   getDoc,
   setDoc
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { useAuth } from './AuthContext';
 import { Chat, Message, Contact } from '@/types/chat';
 
@@ -24,7 +25,7 @@ interface ChatContextType {
   contacts: Contact[];
   activeChat: Chat | null;
   setActiveChat: (chat: Chat | null) => void;
-  sendMessage: (chatId: string, content: string, type?: Message['type']) => Promise<void>;
+  sendMessage: (chatId: string, content: string, type?: Message['type'], file?: File) => Promise<void>;
   markAsRead: (chatId: string) => Promise<void>;
   getContactForChat: (chat: Chat) => Contact | undefined;
   typingUsers: Record<string, boolean>;
@@ -95,6 +96,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             type: data.lastMessage.type || 'text',
             timestamp: data.lastMessage.timestamp?.toDate() || new Date(),
             status: data.lastMessage.status || 'sent',
+            mediaUrl: data.lastMessage.mediaUrl,
+            fileName: data.lastMessage.fileName,
           } : undefined,
           unreadCount: data.unreadCounts?.[user.id] || 0,
           updatedAt: data.updatedAt?.toDate() || new Date(),
@@ -128,6 +131,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           type: data.type || 'text',
           timestamp: data.timestamp?.toDate() || new Date(),
           status: data.status || 'sent',
+          mediaUrl: data.mediaUrl,
+          fileName: data.fileName,
+          fileSize: data.fileSize,
         });
       });
       setMessages(loadedMessages);
@@ -170,19 +176,54 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     return newChatRef.id;
   };
 
-  const sendMessage = async (chatId: string, content: string, type: Message['type'] = 'text') => {
-    if (!user) return;
+  const sendMessage = async (chatId: string, content: string, type: Message['type'] = 'text', file?: File) => {
+    if (!user) {
+      console.error('User not authenticated');
+      throw new Error('User not authenticated');
+    }
 
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const chatRef = doc(db, 'chats', chatId);
 
+    let mediaUrl = '';
+    let fileName = '';
+    let fileSize = 0;
+
+    // Upload file if provided
+    if (file && type !== 'text') {
+      try {
+        console.log('Uploading file:', file.name, 'Type:', type);
+        const storageRef = ref(storage, `chats/${chatId}/${Date.now()}_${file.name}`);
+        const uploadResult = await uploadBytes(storageRef, file);
+        console.log('Upload successful:', uploadResult);
+        mediaUrl = await getDownloadURL(storageRef);
+        console.log('Media URL:', mediaUrl);
+        fileName = file.name;
+        fileSize = file.size;
+      } catch (uploadError: any) {
+        console.error('Error uploading file:', uploadError);
+        throw new Error(`Failed to upload file: ${uploadError.message}`);
+      }
+    }
+
+    // Determine display content
+    const displayContent = type === 'text' ? content : 
+      type === 'image' ? (content || '📷 Photo') :
+      type === 'video' ? (content || '🎥 Video') :
+      type === 'audio' ? (content || '🎵 Audio') :
+      type === 'document' ? (content || `📄 ${fileName}`) :
+      content || 'Media';
+
     // Add message
     const messageDoc = await addDoc(messagesRef, {
       senderId: user.id,
-      content,
+      content: displayContent,
       type,
       timestamp: serverTimestamp(),
       status: 'sent',
+      mediaUrl,
+      fileName,
+      fileSize,
     });
 
     // Get chat to find other participant
@@ -195,10 +236,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       lastMessage: {
         id: messageDoc.id,
         senderId: user.id,
-        content,
+        content: displayContent,
         type,
         timestamp: serverTimestamp(),
         status: 'sent',
+        mediaUrl,
+        fileName,
       },
       [`unreadCounts.${otherParticipant}`]: (chatData?.unreadCounts?.[otherParticipant] || 0) + 1,
       updatedAt: serverTimestamp(),

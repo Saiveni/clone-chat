@@ -13,10 +13,12 @@ export interface Message {
   chatId: string;
   senderId: string;
   content: string;
-  type: 'text' | 'image' | 'voice' | 'document';
+  type: 'text' | 'image' | 'voice' | 'document' | 'video' | 'audio';
   timestamp: Date;
   status: 'sending' | 'sent' | 'delivered' | 'read';
   mediaUrl?: string;
+  fileName?: string;
+  fileSize?: number;
   duration?: number; // for voice messages
 }
 
@@ -41,6 +43,8 @@ export interface Status {
   viewedBy: string[];
   type: 'image' | 'video' | 'text';
   backgroundColor?: string;
+  userName?: string;
+  userAvatar?: string;
 }
 
 export interface Call {

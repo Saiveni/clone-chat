@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { User } from '@/types/chat';
 
@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,37 +29,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let userDocUnsubscribe: (() => void) | null = null;
+    
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      // Clean up previous user document listener
+      if (userDocUnsubscribe) {
+        userDocUnsubscribe();
+        userDocUnsubscribe = null;
+      }
+      
       if (fbUser) {
         setFirebaseUser(fbUser);
-        // Fetch user profile from Firestore
-        const userDoc = await getDoc(doc(db, 'users', fbUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            id: fbUser.uid,
-            name: userData.name || 'User',
-            avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
-            phone: userData.phone || '',
-            about: userData.about || 'Hey there! I am using WhatsApp',
-            lastSeen: userData.lastSeen?.toDate() || new Date(),
-            isOnline: true,
-          });
-          // Update online status
-          await updateDoc(doc(db, 'users', fbUser.uid), {
-            isOnline: true,
-            lastSeen: serverTimestamp(),
-          });
-        }
+        
+        // Listen for real-time updates to user document
+        userDocUnsubscribe = onSnapshot(doc(db, 'users', fbUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUser({
+              id: fbUser.uid,
+              name: userData.name || 'User',
+              avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
+              phone: userData.phone || '',
+              about: userData.about || 'Hey there! I am using WhatsApp',
+              lastSeen: userData.lastSeen?.toDate() || new Date(),
+              isOnline: true,
+            });
+          }
+          setIsLoading(false);
+        });
+        
+        // Update online status
+        await updateDoc(doc(db, 'users', fbUser.uid), {
+          isOnline: true,
+          lastSeen: serverTimestamp(),
+        });
       } else {
         setFirebaseUser(null);
         setUser(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (userDocUnsubscribe) {
+        userDocUnsubscribe();
+      }
+    };
   }, []);
+  
+  const refreshUser = async () => {
+    if (firebaseUser) {
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUser({
+          id: firebaseUser.uid,
+          name: userData.name || 'User',
+          avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`,
+          phone: userData.phone || '',
+          about: userData.about || 'Hey there! I am using WhatsApp',
+          lastSeen: userData.lastSeen?.toDate() || new Date(),
+          isOnline: true,
+        });
+      }
+    }
+  };
 
   const login = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -111,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         signUp,
         logout,
+        refreshUser,
       }}
     >
       {children}
